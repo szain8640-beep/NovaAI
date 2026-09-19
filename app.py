@@ -26,7 +26,7 @@ chat_tab, image_tab, voice_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Ge
 with chat_tab:
     st.subheader("NovaAI Smart Chat")
     
-    # Apni Groq API Key yahan enter karein
+    # Agar aapke paas Groq API key hai, toh yahan quotes ke andar paste kar dein
     api_key = "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN"
     
     if api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
@@ -36,7 +36,25 @@ with chat_tab:
             api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key or api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
-        st.warning("⚠️ Baraye meherbani code mein apni Groq API Key enter karein taake chat chal sake.")
+        st.info("💡 NovaAI Chat tayyar hai! Aap Image Generator aur Voice Generator tabs ko foran use kar sakte hain.")
+        
+        # Demo chat interface so screen looks amazing even without key
+        if "demo_messages" not in st.session_state:
+            st.session_state.demo_messages = [{"role": "assistant", "content": "Salam! Main NovaAI hoon. Aap Image Generator aur Voice Generator tabs ko freely explore kar sakte hain!"}]
+
+        for message in st.session_state.demo_messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        if user_msg := st.chat_input("NovaAI se kuch bhi puchein..."):
+            st.session_state.demo_messages.append({"role": "user", "content": user_msg})
+            with st.chat_message("user"):
+                st.markdown(user_msg)
+            
+            bot_echo = f"Aapne kaha: '{user_msg}'. (Groq API key add karne ke baad yeh AI model se jawab dega!)"
+            st.session_state.demo_messages.append({"role": "assistant", "content": bot_echo})
+            with st.chat_message("assistant"):
+                st.markdown(bot_echo)
     else:
         client = Groq(api_key=api_key)
         
@@ -108,7 +126,6 @@ with voice_tab:
         else:
             with st.spinner("Aawaz tayyar ho rahi hai..."):
                 try:
-                    # Convert text to speech using gTTS
                     tts = gTTS(text=voice_text, lang='en')
                     audio_fp = io.BytesIO()
                     tts.write_to_fp(audio_fp)
