@@ -20,21 +20,23 @@ st.write("Aapka apna advanced AI platform!")
 # Using Tabs so options are directly visible on screen!
 chat_tab, image_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Generator"])
 
-# Initialize Groq Client for Text Chat
-api_key = os.environ.get("GROQ_API_KEY")
-if not api_key:
+with chat_tab:
+    st.subheader("NovaAI Smart Chat")
+    
+    # Try loading Groq API Key safely
+    api_key = None
     try:
         api_key = st.secrets["GROQ_API_KEY"]
     except:
-        pass
+        try:
+            api_key = os.environ.get("GROQ_API_KEY")
+        except:
+            pass
 
-if not api_key:
-    st.error("Groq API Key missing! Please set it in Streamlit Secrets.")
-else:
-    client = Groq(api_key=api_key)
-
-    with chat_tab:
-        st.subheader("NovaAI Smart Chat")
+    if not api_key:
+        st.warning("⚠️ Groq API Key set nahi hai, lekin aap Image Generator tab use kar sakte hain!")
+    else:
+        client = Groq(api_key=api_key)
         
         if "messages" not in st.session_state:
             st.session_state.messages = []
@@ -70,22 +72,22 @@ else:
                 message_placeholder.markdown(bot_reply)
                 st.session_state.messages.append({"role": "assistant", "content": bot_reply})
 
-    with image_tab:
-        st.subheader("NovaAI Image Studio")
-        st.write("Yahan aap apni pasand ki tasveer ka text likhein:")
-        
-        user_image_prompt = st.text_input("Misal: A beautiful sunset over mountains in Pakistan", "", key="img_prompt_input")
-        
-        if st.button("Generate Image"):
-            if not user_image_prompt.strip():
-                st.warning("Pehle koi prompt likhein!")
-            else:
-                with st.spinner("Tasveer generate ho rahi hai, baraye meherbani intezar karein..."):
-                    try:
-                        encoded_prompt = requests.utils.quote(user_image_prompt)
-                        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-                        
-                        st.success("Tasveer kamyabi ke sath ban gayi hai!")
-                        st.image(image_url, caption=user_image_prompt, use_column_width=True)
-                    except Exception as err:
-                        st.error(f"Image generation mein error aa gaya: {err}")
+with image_tab:
+    st.subheader("NovaAI Image Studio")
+    st.write("Yahan aap apni pasand ki tasveer ka text likhein:")
+    
+    user_image_prompt = st.text_input("Misal: A beautiful sunset over mountains in Pakistan", "", key="img_prompt_input")
+    
+    if st.button("Generate Image"):
+        if not user_image_prompt.strip():
+            st.warning("Pehle koi prompt likhein!")
+        else:
+            with st.spinner("Tasveer generate ho rahi hai, baraye meherbani intezar karein..."):
+                try:
+                    encoded_prompt = requests.utils.quote(user_image_prompt)
+                    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+                    
+                    st.success("Tasveer kamyabi ke sath ban gayi hai!")
+                    st.image(image_url, caption=user_image_prompt, use_column_width=True)
+                except Exception as err:
+                    st.error(f"Image generation mein error aa gaya: {err}")
