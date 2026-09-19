@@ -23,18 +23,18 @@ chat_tab, image_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Generator"])
 with chat_tab:
     st.subheader("NovaAI Smart Chat")
     
-    # Try loading Groq API Key safely
-    api_key = None
-    try:
-        api_key = st.secrets["GROQ_API_KEY"]
-    except:
+    # Direct API key configuration (Aap yahan apni key paste kar sakte hain)
+    api_key = "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN" 
+    
+    # Fallback to secrets if not directly written
+    if api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
         try:
-            api_key = os.environ.get("GROQ_API_KEY")
+            api_key = st.secrets["GROQ_API_KEY"]
         except:
-            pass
+            api_key = os.environ.get("GROQ_API_KEY")
 
-    if not api_key:
-        st.warning("⚠️ Groq API Key set nahi hai, lekin aap Image Generator tab use kar sakte hain!")
+    if not api_key or api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
+        st.error("⚠️ Baraye meherbani code mein apni Groq API Key enter karein ya Streamlit Secrets mein set karein!")
     else:
         client = Groq(api_key=api_key)
         
