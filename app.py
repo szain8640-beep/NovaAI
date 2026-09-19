@@ -2,6 +2,8 @@ import streamlit as st
 import os
 from groq import Groq
 import requests
+from gtts import gTTS
+import io
 
 # Page Config
 st.set_page_config(page_title="NovaAI Studio", page_icon="🤖", layout="centered")
@@ -14,19 +16,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🤖 NovaAI - Multi-Modal Studio")
-st.write("Aapka apna advanced AI platform!")
+st.title("🤖 NovaAI - Advanced Multi-Modal Studio")
+st.write("Aapka apna mukammal AI platform (Text Chat, Image Generation, aur Voice Speech ke sath)!")
 
-# Using Tabs so options are directly visible on screen!
-chat_tab, image_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Generator"])
+# Tabs for all features
+chat_tab, image_tab, voice_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Generator", "🗣️ Voice Generator (TTS)"])
 
+# --- TAB 1: TEXT CHAT ---
 with chat_tab:
     st.subheader("NovaAI Smart Chat")
     
-    # Direct API key configuration (Aap yahan apni key paste kar sakte hain)
-    api_key = "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN" 
+    # Apni Groq API Key yahan enter karein
+    api_key = "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN"
     
-    # Fallback to secrets if not directly written
     if api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
         try:
             api_key = st.secrets["GROQ_API_KEY"]
@@ -34,7 +36,7 @@ with chat_tab:
             api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key or api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
-        st.error("⚠️ Baraye meherbani code mein apni Groq API Key enter karein ya Streamlit Secrets mein set karein!")
+        st.warning("⚠️ Baraye meherbani code mein apni Groq API Key enter karein taake chat chal sake.")
     else:
         client = Groq(api_key=api_key)
         
@@ -72,22 +74,47 @@ with chat_tab:
                 message_placeholder.markdown(bot_reply)
                 st.session_state.messages.append({"role": "assistant", "content": bot_reply})
 
+# --- TAB 2: AI IMAGE GENERATOR ---
 with image_tab:
     st.subheader("NovaAI Image Studio")
-    st.write("Yahan aap apni pasand ki tasveer ka text likhein:")
+    st.write("Yahan apni pasand ki tasveer ka text likhein:")
     
-    user_image_prompt = st.text_input("Misal: A beautiful sunset over mountains in Pakistan", "", key="img_prompt_input")
+    user_image_prompt = st.text_input("Misal: A beautiful realistic portrait of a handsome boy", "", key="img_prompt_input")
     
     if st.button("Generate Image"):
         if not user_image_prompt.strip():
             st.warning("Pehle koi prompt likhein!")
         else:
-            with st.spinner("Tasveer generate ho rahi hai, baraye meherbani intezar karein..."):
+            with st.spinner("Tasveer generate ho rahi hai, intezar karein..."):
                 try:
                     encoded_prompt = requests.utils.quote(user_image_prompt)
                     image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
                     
                     st.success("Tasveer kamyabi ke sath ban gayi hai!")
-                    st.image(image_url, caption=user_image_prompt, use_column_width=True)
+                    st.image(image_url, caption=user_image_prompt, use_container_width=True)
                 except Exception as err:
                     st.error(f"Image generation mein error aa gaya: {err}")
+
+# --- TAB 3: VOICE GENERATOR (TEXT-TO-SPEECH) ---
+with voice_tab:
+    st.subheader("NovaAI Voice Studio")
+    st.write("Jo text aap likhenge, NovaAI usay aawaz (audio) mein badal dega:")
+    
+    voice_text = st.text_area("Yahan text likhein jo aap sunna chahte hain:", "Hello! Main NovaAI hoon, aapka apna advanced AI assistant.")
+    
+    if st.button("Generate Voice Audio"):
+        if not voice_text.strip():
+            st.warning("Pehle kuch text likhein!")
+        else:
+            with st.spinner("Aawaz tayyar ho rahi hai..."):
+                try:
+                    # Convert text to speech using gTTS
+                    tts = gTTS(text=voice_text, lang='en')
+                    audio_fp = io.BytesIO()
+                    tts.write_to_fp(audio_fp)
+                    audio_fp.seek(0)
+                    
+                    st.success("Aawaz kamyabi ke sath tayyar ho gayi hai!")
+                    st.audio(audio_fp, format='audio/mp3')
+                except Exception as voice_err:
+                    st.error(f"Voice generation mein error: {voice_err}")
