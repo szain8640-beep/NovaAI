@@ -13,11 +13,15 @@ st.markdown("""
     .main {
         background-color: #0e1117;
     }
+    .stTextInput input, .stTextArea textarea {
+        background-color: #161b22;
+        color: #ffffff;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🤖 NovaAI - Advanced Multi-Modal Studio")
-st.write("Aapka apna mukammal AI platform (Text Chat, Image Generation, aur Voice Speech ke sath)!")
+st.write("Aapka apna advanced AI platform jo ab Text Chat, Image Generation, aur Voice Speech ko support karta hai!")
 
 # Tabs for all features
 chat_tab, image_tab, voice_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Generator", "🗣️ Voice Generator (TTS)"])
@@ -26,7 +30,7 @@ chat_tab, image_tab, voice_tab = st.tabs(["💬 Text Chat", "🖼️ AI Image Ge
 with chat_tab:
     st.subheader("NovaAI Smart Chat")
     
-    # Agar aapke paas Groq API key hai, toh yahan quotes ke andar paste kar dein
+    # Yahan apni asal Groq API Key daal sakte hain (ya secrets use karein)
     api_key = "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN"
     
     if api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
@@ -36,68 +40,53 @@ with chat_tab:
             api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key or api_key == "YOUR_GROQ_API_KEY_YAHAN_LIKHEIN":
-        st.info("💡 NovaAI Chat tayyar hai! Aap Image Generator aur Voice Generator tabs ko foran use kar sakte hain.")
-        
-        # Demo chat interface so screen looks amazing even without key
-        if "demo_messages" not in st.session_state:
-            st.session_state.demo_messages = [{"role": "assistant", "content": "Salam! Main NovaAI hoon. Aap Image Generator aur Voice Generator tabs ko freely explore kar sakte hain!"}]
-
-        for message in st.session_state.demo_messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        if user_msg := st.chat_input("NovaAI se kuch bhi puchein..."):
-            st.session_state.demo_messages.append({"role": "user", "content": user_msg})
-            with st.chat_message("user"):
-                st.markdown(user_msg)
-            
-            bot_echo = f"Aapne kaha: '{user_msg}'. (Groq API key add karne ke baad yeh AI model se jawab dega!)"
-            st.session_state.demo_messages.append({"role": "assistant", "content": bot_echo})
-            with st.chat_message("assistant"):
-                st.markdown(bot_echo)
+        st.error("⚠️ Baraye meherbani apni Groq API Key set karein taake NovaAI bilkul pehle ki tarah real AI answers de sake.")
     else:
-        client = Groq(api_key=api_key)
-        
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
+        try:
+            client = Groq(api_key=api_key)
+            
+            if "messages" not in st.session_state:
+                st.session_state.messages = []
 
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
 
-        if prompt := st.chat_input("NovaAI se kuch bhi puchein..."):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
+            if prompt := st.chat_input("NovaAI se kuch bhi puchein..."):
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
+                    st.markdown(prompt)
 
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                system_prompt = {
-                    "role": "system",
-                    "content": "Aap ek expert, highly intelligent aur dostana AI assistant hain jiska naam NovaAI hai."
-                }
-                full_messages = [system_prompt] + st.session_state.messages
+                with st.chat_message("assistant"):
+                    message_placeholder = st.empty()
+                    system_prompt = {
+                        "role": "system",
+                        "content": "Aap ek expert, highly intelligent aur dostana AI assistant hain jiska naam NovaAI hai."
+                    }
+                    full_messages = [system_prompt] + st.session_state.messages
 
-                try:
-                    completion = client.chat.completions.create(
-                        model="openai/gpt-oss-120b",
-                        messages=full_messages,
-                        temperature=0.7,
-                        max_tokens=1024,
-                    )
-                    bot_reply = completion.choices[0].message.content
-                except Exception as e:
-                    bot_reply = f"Maazrat, koi error aa gaya hai: {e}"
+                    try:
+                        completion = client.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=full_messages,
+                            temperature=0.7,
+                            max_tokens=1024,
+                        )
+                        bot_reply = completion.choices[0].message.content
+                    except Exception as e:
+                        bot_reply = f"Maazrat, AI response mein error aa gaya hai: {e}"
 
-                message_placeholder.markdown(bot_reply)
-                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+                    message_placeholder.markdown(bot_reply)
+                    st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+        except Exception as chat_err:
+            st.error(f"Chat initialization error: {chat_err}")
 
 # --- TAB 2: AI IMAGE GENERATOR ---
 with image_tab:
     st.subheader("NovaAI Image Studio")
-    st.write("Yahan apni pasand ki tasveer ka text likhein:")
+    st.write("Yahan apni pasand ki tasveer ka text likhein aur foran hasil karein:")
     
-    user_image_prompt = st.text_input("Misal: A beautiful realistic portrait of a handsome boy", "", key="img_prompt_input")
+    user_image_prompt = st.text_input("Misal: A beautiful realistic portrait of a futuristic cyberpunk city", "", key="img_prompt_input")
     
     if st.button("Generate Image"):
         if not user_image_prompt.strip():
@@ -116,9 +105,9 @@ with image_tab:
 # --- TAB 3: VOICE GENERATOR (TEXT-TO-SPEECH) ---
 with voice_tab:
     st.subheader("NovaAI Voice Studio")
-    st.write("Jo text aap likhenge, NovaAI usay aawaz (audio) mein badal dega:")
+    st.write("Jo text aap yahan likhenge, NovaAI usay saaf aawaz (Audio MP3) mein convert kar dega:")
     
-    voice_text = st.text_area("Yahan text likhein jo aap sunna chahte hain:", "Hello! Main NovaAI hoon, aapka apna advanced AI assistant.")
+    voice_text = st.text_area("Yahan text likhein:", "Hello! Main NovaAI hoon, aapka apna advanced AI assistant.")
     
     if st.button("Generate Voice Audio"):
         if not voice_text.strip():
@@ -131,7 +120,7 @@ with voice_tab:
                     tts.write_to_fp(audio_fp)
                     audio_fp.seek(0)
                     
-                    st.success("Aawaz kamyabi ke sath tayyar ho gayi hai!")
+                    st.success("Aawaz kamyabi ke sath tayyar ho gayi hai! Neeche play button par click karein:")
                     st.audio(audio_fp, format='audio/mp3')
                 except Exception as voice_err:
                     st.error(f"Voice generation mein error: {voice_err}")
